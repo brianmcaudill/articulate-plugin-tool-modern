@@ -34,7 +34,13 @@ ArticulateTools.RibbonConfig = class {
         RULERS: 'rulers',
         NOTES: 'notes'
     };
-
+    static MutuallyExclusiveTools = {
+        'drag': ['text', 'style', 'resize'],
+        'text': ['drag', 'resize', 'image'],
+        'style': ['drag', 'resize'],
+        'resize': ['drag', 'text', 'style'],
+        'image': ['text']
+    };
     // Tool configuration factory
     static createTool(id, icon, label, options = {}) {
         return {

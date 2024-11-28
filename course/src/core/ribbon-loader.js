@@ -90,17 +90,40 @@ ArticulateTools.RibbonLoader = class {
         // Initialize core ribbon styles
         ArticulateTools.RibbonStyles.init();
     }
+    // toolToggleMap = {
+    //     'slideList': () => this.instances.tools.get('slideList').toggle(),
+    //     'grid': () => this.instances.tools.get('grid').toggle(),
+    //     'drag': () => this.instances.tools.get('drag').toggle(),
+    //     'text': () => this.instances.tools.get('textEditor').toggle(),
+    //     'style': () => this.instances.tools.get('textStyler').toggle(),
+    //     'image': () => this.instances.tools.get('imageSwap').toggle(),
+    //     'resize': () => this.instances.tools.get('resize').toggle()
+    // }
+    // { grid → {…}, drag → {…}, textEditor → {…}, textStyler → {…}, 
+    // imageSwap → {…}, resize → {…}, tooltipManager → {}, recentManager → {}, menuManager → {} }
     toolToggleMap = {
         'slideList': () => this.instances.tools.get('slideList').toggle(),
         'grid': () => this.instances.tools.get('grid').toggle(),
-        'drag': () => this.instances.tools.get('drag').toggle(),
-        'text': () => this.instances.tools.get('textEditor').toggle(),
-        'style': () => this.instances.tools.get('textStyler').toggle(),
-        'image': () => this.instances.tools.get('imageSwap').toggle(),
-        'resize': () => this.instances.tools.get('resize').toggle()
+        'drag': () => this.handleExclusiveToolToggle('drag'),
+        'text': () => this.handleExclusiveToolToggle('textEditor'),
+        'style': () => this.handleExclusiveToolToggle('textStyler'),
+        'image': () => this.handleExclusiveToolToggle('imageSwap'),
+        'resize': () => this.handleExclusiveToolToggle('resize')
     }
-    // { grid → {…}, drag → {…}, textEditor → {…}, textStyler → {…}, 
-    // imageSwap → {…}, resize → {…}, tooltipManager → {}, recentManager → {}, menuManager → {} }
+    handleExclusiveToolToggle(toolId) {
+        const exclusiveTools = ArticulateTools.RibbonConfig.MutuallyExclusiveTools[toolId] || [];
+        
+        // Disable any active exclusive tools
+        exclusiveTools.forEach(exclusiveId => {
+            const tool = this.instances.tools.get(exclusiveId);
+            if (tool?.getEnabled()) {
+                tool.toggle();
+            }
+        });
+    
+        // Toggle the requested tool
+        return this.instances.tools.get(toolId).toggle();
+    }
     connectToolButtons() {
         console.log("tools: " + this.instances.tools);
         console.log(this.instances.tools);
