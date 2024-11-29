@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cropper.js with Resize Handles</title>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <style>
+        #image-container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        #image {
+            max-width: 100%;
+        }
+
+        .crop-preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cropper.js with Resize Handles</h1>
+    <div id="image-container">
+        <img id="image" src="image.jpeg" alt="Editable image" />
+    </div>
+    <div class="crop-preview">
+        <button id="get-cropped-image">Get Cropped Image</button>
+        <br /><br />
+        <img id="cropped-result" alt="Cropped result" style="display: none;" />
+    </div>
+
+    <script>
+        const image = document.getElementById('image');
+        const croppedResult = document.getElementById('cropped-result');
+        const cropper = new Cropper(image, {
+            viewMode: 1, // Ensures the image stays within the canvas
+            dragMode: 'crop', // Default drag mode
+            autoCropArea: 0.8, // Initial crop area as 80% of the image
+            responsive: true, // Resizes the crop box when the window is resized
+            aspectRatio: NaN, // Free resize
+            guides: true, // Show grid lines inside the crop box
+            crop(event) {
+                console.log('Crop area:', event.detail.width, 'x', event.detail.height);
+            },
+        });
+
+        document.getElementById('get-cropped-image').addEventListener('click', () => {
+            const canvas = cropper.getCroppedCanvas();
+            if (canvas) {
+                croppedResult.src = canvas.toDataURL();
+                croppedResult.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resizable and Draggable Image (Optimized)</title>
+    <style>
+        .resizable {
+            position: absolute;
+            display: inline-block;
+            overflow: hidden;
+            border: 2px solid #ccc;
+            cursor: move; /* Cursor indicates draggable area */
+        }
+
+        .resizable img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .resizer {
+            width: 10px;
+            height: 10px;
+            background: #007bff;
+            position: absolute;
+            z-index: 10;
+        }
+
+        /* Position of Resizers */
+        .resizer.top-left {
+            top: 0;
+            left: 0;
+            cursor: nwse-resize;
+        }
+
+        .resizer.top-right {
+            top: 0;
+            right: 0;
+            cursor: nesw-resize;
+        }
+
+        .resizer.bottom-left {
+            bottom: 0;
+            left: 0;
+            cursor: nesw-resize;
+        }
+
+        .resizer.bottom-right {
+            bottom: 0;
+            right: 0;
+            cursor: nwse-resize;
+        }
+    </style>
+</head>
+<body>
+    <h1>Resizable and Draggable Image (Optimized)</h1>
+    <div class="resizable" id="resizable">
+        <img src="image.jpeg" alt="Resizable image" id="image">
+        <div class="resizer top-left"></div>
+        <div class="resizer top-right"></div>
+        <div class="resizer bottom-left"></div>
+        <div class="resizer bottom-right"></div>
+    </div>
+
+    <script>
+        const resizable = document.getElementById('resizable');
+        const image = document.getElementById('image');
+        const resizers = document.querySelectorAll('.resizer');
+        let isResizing = false;
+        let isDragging = false;
+        let originalWidth, originalHeight, originalX, originalY, originalMouseX, originalMouseY;
+        const originalAspectRatio = image.offsetWidth / image.offsetHeight; // Calculate aspect ratio
+
+        // Dragging logic
+        resizable.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('resizer')) return; // Ignore dragging if resizing
+            isDragging = true;
+
+            originalX = resizable.offsetLeft;
+            originalY = resizable.offsetTop;
+            originalMouseX = e.pageX;
+            originalMouseY = e.pageY;
+
+            window.addEventListener('mousemove', drag);
+            window.addEventListener('mouseup', stopDrag);
+        });
+
+        function drag(e) {
+            if (!isDragging) return;
+
+            const dx = e.pageX - originalMouseX;
+            const dy = e.pageY - originalMouseY;
+
+            resizable.style.left = `${originalX + dx}px`;
+            resizable.style.top = `${originalY + dy}px`;
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            window.removeEventListener('mousemove', drag);
+            window.removeEventListener('mouseup', stopDrag);
+        }
+
+        // Resizing logic
+        resizers.forEach((resizer) => {
+            resizer.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isResizing = true;
+
+                originalWidth = resizable.offsetWidth;
+                originalHeight = resizable.offsetHeight;
+                originalX = resizable.offsetLeft;
+                originalY = resizable.offsetTop;
+                originalMouseX = e.pageX;
+                originalMouseY = e.pageY;
+
+                window.addEventListener('mousemove', resize);
+                window.addEventListener('mouseup', stopResize);
+            });
+
+            function resize(e) {
+                if (!isResizing) return;
+
+                const dx = e.pageX - originalMouseX;
+                const dy = e.pageY - originalMouseY;
+
+                let newWidth = originalWidth;
+                let newHeight = originalHeight;
+                const shiftKey = e.shiftKey;
+
+                if (resizer.classList.contains('bottom-right')) {
+                    if (shiftKey) {
+                        newWidth = Math.max(originalWidth + dx, 50);
+                        newHeight = newWidth / originalAspectRatio;
+                    } else {
+                        newWidth = Math.max(originalWidth + dx, 50);
+                        newHeight = Math.max(originalHeight + dy, 50);
+                    }
+                } else if (resizer.classList.contains('bottom-left')) {
+                    if (shiftKey) {
+                        newWidth = Math.max(originalWidth - dx, 50);
+                        newHeight = newWidth / originalAspectRatio;
+                    } else {
+                        newWidth = Math.max(originalWidth - dx, 50);
+                        newHeight = Math.max(originalHeight + dy, 50);
+                    }
+                    resizable.style.left = `${originalX + dx}px`;
+                } else if (resizer.classList.contains('top-right')) {
+                    if (shiftKey) {
+                        newWidth = Math.max(originalWidth + dx, 50);
+                        newHeight = newWidth / originalAspectRatio;
+                    } else {
+                        newWidth = Math.max(originalWidth + dx, 50);
+                        newHeight = Math.max(originalHeight - dy, 50);
+                    }
+                    resizable.style.top = `${originalY + dy}px`;
+                } else if (resizer.classList.contains('top-left')) {
+                    if (shiftKey) {
+                        newWidth = Math.max(originalWidth - dx, 50);
+                        newHeight = newWidth / originalAspectRatio;
+                    } else {
+                        newWidth = Math.max(originalWidth - dx, 50);
+                        newHeight = Math.max(originalHeight - dy, 50);
+                    }
+                    resizable.style.left = `${originalX + dx}px`;
+                    resizable.style.top = `${originalY + dy}px`;
+                }
+
+                // Apply new dimensions without shifting unnecessarily
+                image.style.width = `${newWidth}px`;
+                image.style.height = `${newHeight}px`;
+                resizable.style.width = `${newWidth}px`;
+                resizable.style.height = `${newHeight}px`;
+            }
+
+            function stopResize() {
+                isResizing = false;
+                window.removeEventListener('mousemove', resize);
+                window.removeEventListener('mouseup', stopResize);
+            }
+        });
+
+        // Prevent image dragging behavior
+        document.getElementById('image').addEventListener('mousedown', (e) => e.preventDefault());
+    </script>
+</body>
+</html>

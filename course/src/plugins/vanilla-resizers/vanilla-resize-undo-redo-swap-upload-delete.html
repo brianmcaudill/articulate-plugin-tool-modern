@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resizable and Draggable Image with Overlay Buttons</title>
+    <style>
+        .resizable {
+            position: absolute;
+            display: inline-block;
+            overflow: hidden;
+            border: 2px solid #ccc;
+            cursor: move; /* Cursor indicates draggable area */
+        }
+
+        .resizable img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .resizable .controls {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+            z-index: 20;
+        }
+
+        .resizable .controls button {
+            background: rgba(0, 0, 0, 0.6);
+            border: none;
+            color: white;
+            font-size: 14px;
+            padding: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .resizable .controls button:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .resizer {
+            width: 10px;
+            height: 10px;
+            background: #007bff;
+            position: absolute;
+            z-index: 10;
+        }
+
+        /* Position of Resizers */
+        .resizer.top-left {
+            top: 0;
+            left: 0;
+            cursor: nwse-resize;
+        }
+
+        .resizer.top-right {
+            top: 0;
+            right: 0;
+            cursor: nesw-resize;
+        }
+
+        .resizer.bottom-left {
+            bottom: 0;
+            left: 0;
+            cursor: nesw-resize;
+        }
+
+        .resizer.bottom-right {
+            bottom: 0;
+            right: 0;
+            cursor: nwse-resize;
+        }
+    </style>
+</head>
+<body>
+    <h1>Resizable and Draggable Image</h1>
+    <div class="resizable" id="resizable">
+        <div class="controls">
+            <button id="undo" title="Undo">↩️</button>
+            <button id="redo" title="Redo">↪️</button>
+            <button id="delete" title="Delete">❌</button>
+            <button id="swap" title="Swap Image">🔄</button>
+        </div>
+        <img src="image.jpeg" alt="Resizable image" id="image">
+        <div class="resizer top-left"></div>
+        <div class="resizer top-right"></div>
+        <div class="resizer bottom-left"></div>
+        <div class="resizer bottom-right"></div>
+    </div>
+
+    <script>
+        const resizable = document.getElementById('resizable');
+        const image = document.getElementById('image');
+        const undoButton = document.getElementById('undo');
+        const redoButton = document.getElementById('redo');
+        const deleteButton = document.getElementById('delete');
+        const swapButton = document.getElementById('swap');
+
+        const resizers = document.querySelectorAll('.resizer');
+        const undoStack = [];
+        const redoStack = [];
+        const swapImages = ['image1.png', 'image2.png', 'image3.png']; // Example image paths
+        let currentSwapIndex = 0;
+
+        let isResizing = false;
+        let isDragging = false;
+        let originalWidth, originalHeight, originalX, originalY, originalMouseX, originalMouseY;
+        const originalAspectRatio = image.offsetWidth / image.offsetHeight; // Calculate aspect ratio
+
+        // Save the current state to the undo stack
+        function saveState() {
+            const state = {
+                width: resizable.offsetWidth,
+                height: resizable.offsetHeight,
+                top: resizable.offsetTop,
+                left: resizable.offsetLeft,
+                src: image.src
+            };
+            undoStack.push(state);
+            redoStack.length = 0; // Clear redo stack whenever a new state is saved
+        }
+
+        // Apply a saved state
+        function applyState(state) {
+            resizable.style.width = `${state.width}px`;
+            resizable.style.height = `${state.height}px`;
+            resizable.style.top = `${state.top}px`;
+            resizable.style.left = `${state.left}px`;
+            image.style.width = `${state.width}px`; // Sync image width
+            image.style.height = `${state.height}px`; // Sync image height
+            image.src = state.src;
+        }
+
+        // Dragging logic
+        resizable.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('resizer') || e.target.closest('.controls')) return; // Ignore dragging if resizing or clicking buttons
+            saveState(); // Save state before dragging
+            isDragging = true;
+
+            originalX = resizable.offsetLeft;
+            originalY = resizable.offsetTop;
+            originalMouseX = e.pageX;
+            originalMouseY = e.pageY;
+
+            window.addEventListener('mousemove', drag);
+            window.addEventListener('mouseup', stopDrag);
+        });
+
+        function drag(e) {
+            if (!isDragging) return;
+
+            const dx = e.pageX - originalMouseX;
+            const dy = e.pageY - originalMouseY;
+
+            resizable.style.left = `${originalX + dx}px`;
+            resizable.style.top = `${originalY + dy}px`;
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            window.removeEventListener('mousemove', drag);
+            window.removeEventListener('mouseup', stopDrag);
+        }
+
+        // Resizing logic
+        resizers.forEach((resizer) => {
+            resizer.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                saveState(); // Save state before resizing
+                isResizing = true;
+
+                originalWidth = resizable.offsetWidth;
+                originalHeight = resizable.offsetHeight;
+                originalX = resizable.offsetLeft;
+                originalY = resizable.offsetTop;
+                originalMouseX = e.pageX;
+                originalMouseY = e.pageY;
+
+                window.addEventListener('mousemove', resize);
+                window.addEventListener('mouseup', stopResize);
+            });
+
+            function resize(e) {
+                if (!isResizing) return;
+
+                const dx = e.pageX - originalMouseX;
+                const dy = e.pageY - originalMouseY;
+
+                let newWidth = originalWidth;
+                let newHeight = originalHeight;
+                const shiftKey = e.shiftKey;
+
+                if (resizer.classList.contains('bottom-right')) {
+                    if (shiftKey) {
+                        newWidth = Math.max(originalWidth + dx, 50);
+                        newHeight = newWidth / originalAspectRatio;
+                    } else {
+                        newWidth = Math.max(originalWidth + dx, 50);
+                        newHeight = Math.max(originalHeight + dy, 50);
+                    }
+                } else if (resizer.classList.contains('bottom-left')) {
+                    if (shiftKey) {
+                        newWidth = Math.max(originalWidth - dx, 50);
+                        newHeight = newWidth / originalAspectRatio;
+                    } else {
+                        newWidth = Math.max(originalWidth - dx, 50);
+                        newHeight = Math.max(originalHeight + dy, 50);
+                    }
+                    resizable.style.left = `${originalX + dx}px`;
+                } else if (resizer.classList.contains('top-right')) {
+                    if (shiftKey) {
+                        newWidth = Math.max(originalWidth + dx, 50);
+                        newHeight = newWidth / originalAspectRatio;
+                    } else {
+                        newWidth = Math.max(originalWidth + dx, 50);
+                        newHeight = Math.max(originalHeight - dy, 50);
+                    }
+                    resizable.style.top = `${originalY + dy}px`;
+                } else if (resizer.classList.contains('top-left')) {
+                    if (shiftKey) {
+                        newWidth = Math.max(originalWidth - dx, 50);
+                        newHeight = newWidth / originalAspectRatio;
+                    } else {
+                        newWidth = Math.max(originalWidth - dx, 50);
+                        newHeight = Math.max(originalHeight - dy, 50);
+                    }
+                    resizable.style.left = `${originalX + dx}px`;
+                    resizable.style.top = `${originalY + dy}px`;
+                }
+
+                // Apply new dimensions
+                image.style.width = `${newWidth}px`;
+                image.style.height = `${newHeight}px`;
+                resizable.style.width = `${newWidth}px`;
+                resizable.style.height = `${newHeight}px`;
+            }
+
+            function stopResize() {
+                isResizing = false;
+                window.removeEventListener('mousemove', resize);
+                window.removeEventListener('mouseup', stopResize);
+            }
+        });
+
+        // Undo
+        undoButton.addEventListener('click', () => {
+            if (undoStack.length > 0) {
+                const currentState = {
+                    width: resizable.offsetWidth,
+                    height: resizable.offsetHeight,
+                    top: resizable.offsetTop,
+                    left: resizable.offsetLeft,
+                    src: image.src
+                };
+                redoStack.push(currentState); // Save current state to redo stack
+                const previousState = undoStack.pop(); // Get the previous state
+                applyState(previousState); // Apply the previous state
+            }
+        });
+
+        // Redo
+        redoButton.addEventListener('click', () => {
+            if (redoStack.length > 0) {
+                const nextState = redoStack.pop(); // Get the next state
+                undoStack.push({
+                    width: resizable.offsetWidth,
+                    height: resizable.offsetHeight,
+                    top: resizable.offsetTop,
+                    left: resizable.offsetLeft,
+                    src: image.src
+                }); // Save current state to undo stack
+                applyState(nextState); // Apply the next state
+            }
+        });
+
+        // Delete
+        deleteButton.addEventListener('click', () => {
+            saveState(); // Save state before deleting
+            resizable.style.display = 'none';
+        });
+
+        // Swap
+        swapButton.addEventListener('click', () => {
+            currentSwapIndex = (currentSwapIndex + 1) % swapImages.length; // Cycle through the images
+            saveState(); // Save state before swapping
+            image.src = swapImages[currentSwapIndex];
+        });
+
+        // Prevent image dragging behavior
+        image.addEventListener('mousedown', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
