@@ -1,16 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resizable and Draggable Image with Overlay Buttons</title>
     <style>
+        .menu-bar {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.menu-bar button {
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    color: white;
+    font-size: 16px;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.menu-bar button:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
         .resizable {
             position: absolute;
             display: inline-block;
             overflow: hidden;
             border: 2px solid #ccc;
-            cursor: move; /* Cursor indicates draggable area */
+            cursor: move;
+            /* Cursor indicates draggable area */
         }
 
         .resizable img {
@@ -74,25 +103,51 @@
             right: 0;
             cursor: nwse-resize;
         }
+
+        .off-screen-indicator {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            z-index: 1000;
+        }
     </style>
 </head>
+
 <body>
+    <div class="off-screen-indicator" id="indicator">↖️</div>
     <h1>Resizable and Draggable Image</h1>
-    <div class="resizable" id="resizable">
+    <!-- <div class="resizable" id="resizable">
         <div class="controls">
             <button id="undo" title="Undo">↩️</button>
             <button id="redo" title="Redo">↪️</button>
             <button id="delete" title="Delete">❌</button>
             <button id="swap" title="Swap Image">🔄</button>
+        </div> -->
+        <div class="menu-bar">
+            <button id="undo" title="Undo">↩️</button>
+            <button id="redo" title="Redo">↪️</button>
+            <button id="delete" title="Delete">❌</button>
+            <button id="swap" title="Swap Image">🔄</button>
         </div>
-        <img src="image.jpeg" alt="Resizable image" id="image">
-        <div class="resizer top-left"></div>
-        <div class="resizer top-right"></div>
-        <div class="resizer bottom-left"></div>
-        <div class="resizer bottom-right"></div>
-    </div>
+    
+        <div class="resizable" id="resizable">
+            <img src="image.jpeg" alt="Resizable image" id="image">
+            <div class="resizer top-left"></div>
+            <div class="resizer top-right"></div>
+            <div class="resizer bottom-left"></div>
+            <div class="resizer bottom-right"></div>
+        </div>
 
     <script>
+        const indicator = document.getElementById('indicator');
         const resizable = document.getElementById('resizable');
         const image = document.getElementById('image');
         const undoButton = document.getElementById('undo');
@@ -103,7 +158,6 @@
         const resizers = document.querySelectorAll('.resizer');
         const undoStack = [];
         const redoStack = [];
-        const swapImages = ['image1.png', 'image2.png', 'image3.png']; // Example image paths
         let currentSwapIndex = 0;
 
         let isResizing = false;
@@ -149,7 +203,65 @@
             window.addEventListener('mousemove', drag);
             window.addEventListener('mouseup', stopDrag);
         });
+        function checkIfOffScreen() {
+    const rect = resizable.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const buffer = 15; // 15px buffer zone
+    const indicatorSize = 40; // Size of the indicator
+    
+    const isOffScreen = 
+        rect.left > (viewportWidth - buffer) ||
+        rect.right < buffer ||
+        rect.top > (viewportHeight - buffer) ||
+        rect.bottom < buffer;
 
+    if (isOffScreen) {
+        // Find image center X
+        const imageCenterX = rect.left + (rect.width / 2);
+        
+        // Determine which edge to place the indicator
+        let indicatorX = Math.min(Math.max(imageCenterX - (indicatorSize / 2), 0), viewportWidth - indicatorSize);
+        let indicatorY;
+
+        if (rect.top > viewportHeight - buffer) {
+            indicatorY = viewportHeight - indicatorSize - 10; // Bottom edge
+            indicator.textContent = '⬇️';
+        } else if (rect.bottom < buffer) {
+            indicatorY = 10; // Top edge
+            indicator.textContent = '⬆️';
+        } else if (rect.left > viewportWidth - buffer) {
+            indicatorX = viewportWidth - indicatorSize - 10; // Right edge
+            indicatorY = Math.min(Math.max(rect.top + rect.height / 2 - indicatorSize / 2, 0), viewportHeight - indicatorSize);
+            indicator.textContent = '➡️';
+        } else {
+            indicatorX = 10; // Left edge
+            indicatorY = Math.min(Math.max(rect.top + rect.height / 2 - indicatorSize / 2, 0), viewportHeight - indicatorSize);
+            indicator.textContent = '⬅️';
+        }
+        
+        indicator.style.left = `${indicatorX}px`;
+        indicator.style.top = `${indicatorY}px`;
+        indicator.style.display = 'flex';
+    } else {
+        indicator.style.display = 'none';
+    }
+}
+        indicator.addEventListener('click', () => {
+            saveState(); // Save current state before centering
+
+            // Center the image
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            resizable.style.left = `${(viewportWidth - resizable.offsetWidth) / 2}px`;
+            resizable.style.top = `${(viewportHeight - resizable.offsetHeight) / 2}px`;
+
+            indicator.style.display = 'none';
+        });
+
+        // Add window resize handler
+        window.addEventListener('resize', checkIfOffScreen);
         function drag(e) {
             if (!isDragging) return;
 
@@ -158,6 +270,8 @@
 
             resizable.style.left = `${originalX + dx}px`;
             resizable.style.top = `${originalY + dy}px`;
+
+            checkIfOffScreen();
         }
 
         function stopDrag() {
@@ -285,13 +399,31 @@
 
         // Swap
         swapButton.addEventListener('click', () => {
-            currentSwapIndex = (currentSwapIndex + 1) % swapImages.length; // Cycle through the images
-            saveState(); // Save state before swapping
-            image.src = swapImages[currentSwapIndex];
-        });
+            // Create a hidden file input
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
 
+            // Trigger file selection when button is clicked
+            fileInput.click();
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+
+                    reader.onload = (event) => {
+                        saveState(); // Save current state before swapping
+                        image.src = event.target.result;
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
         // Prevent image dragging behavior
         image.addEventListener('mousedown', (e) => e.preventDefault());
     </script>
 </body>
+
 </html>
