@@ -26,6 +26,8 @@ ArticulateTools.RibbonConfig = class {
         GUIDES: 'guides',
         DRAG: 'drag',
         RESIZE: 'resize',
+        RESIZEIMG: 'resizeImg',
+        RESIZESVG: 'resizeSvg',
         TEXT: 'text',
         IMAGE: 'image',
         STYLE: 'style',
@@ -49,7 +51,8 @@ ArticulateTools.RibbonConfig = class {
             label,
             size: options.size || this.ToolSize.SMALL,
             toggleFn: options.toggleFn,
-            shortcut: options.shortcut
+            shortcut: options.shortcut,
+            subTools: options.subTools || [],
         };
     }
 
@@ -79,10 +82,33 @@ ArticulateTools.RibbonConfig = class {
             toggleFn: 'toggleStorylineDrag',
             shortcut: 'Alt+M'
         }),
+        // [this.ToolID.RESIZE]: this.createTool(this.ToolID.RESIZE, '⤡', 'Resize', {
+        //     size: this.ToolSize.LARGE,
+        //     toggleFn: 'toggleStorylineResize',
+        //     shortcut: 'Alt+R'
+        // }),
+        // [this.ToolID.RESIZEIMG]: this.createTool(this.ToolID.RESIZEIMG, '⤡', 'Resize IMG', {
+        //     size: this.ToolSize.LARGE,
+        //     toggleFn: 'toggleStorylineResizeImg',
+        //     shortcut: 'Alt+R'
+        // }),
+        // [this.ToolID.RESIZESVG]: this.createTool(this.ToolID.RESIZESVG, '⤡', 'Resize SVG', {
+        //     size: this.ToolSize.LARGE,
+        //     toggleFn: 'toggleStorylineResizeSvg',
+        //     shortcut: 'Alt+R'
+        // }),
         [this.ToolID.RESIZE]: this.createTool(this.ToolID.RESIZE, '⤡', 'Resize', {
             size: this.ToolSize.LARGE,
             toggleFn: 'toggleStorylineResize',
-            shortcut: 'Alt+R'
+            shortcut: 'Alt+R',
+            subTools: [
+                this.createTool(this.ToolID.RESIZEIMG, '🖼', 'Resize Image', {
+                    toggleFn: 'toggleStorylineResizeImg'
+                }),
+                this.createTool(this.ToolID.RESIZESVG, '⚙', 'Resize SVG', {
+                    toggleFn: 'toggleStorylineResizeSvg'
+                })
+            ]
         }),
         [this.ToolID.TEXT]: this.createTool(this.ToolID.TEXT, 'T', 'Edit Text', {
             size: this.ToolSize.LARGE,
@@ -118,7 +144,9 @@ ArticulateTools.RibbonConfig = class {
         ]),
         [this.GroupID.EDIT]: this.createGroup(this.GroupID.EDIT, 'Edit', [
             this.TOOLS[this.ToolID.DRAG],
-            this.TOOLS[this.ToolID.RESIZE]
+            this.TOOLS[this.ToolID.RESIZE],
+            this.TOOLS[this.ToolID.RESIZEIMG],
+            this.TOOLS[this.ToolID.RESIZESVG],
         ]),
         [this.GroupID.CONTENT]: this.createGroup(this.GroupID.CONTENT, 'Content', [
             this.TOOLS[this.ToolID.TEXT],
@@ -137,17 +165,38 @@ ArticulateTools.RibbonConfig = class {
 
     // Tab definitions
     static TABS = [
-        this.createTab(this.TabID.HOME, 'Home', [
-            this.GROUPS[this.GroupID.LAYOUT],
-            this.GROUPS[this.GroupID.EDIT],
-            this.GROUPS[this.GroupID.CONTENT]
-        ]),
-        this.createTab(this.TabID.INSERT, 'Insert', [
-            this.GROUPS[this.GroupID.OBJECTS]
-        ]),
-        this.createTab(this.TabID.VIEW, 'View', [
-            this.GROUPS[this.GroupID.SHOW_HIDE]
-        ])
+        {
+            id: this.TabID.HOME,
+            label: 'Home',
+            groups: [
+                {
+                    id: this.GroupID.LAYOUT,
+                    title: 'Layout',
+                    tools: [
+                        this.TOOLS[this.ToolID.SLIDES],
+                        this.TOOLS[this.ToolID.GRID],
+                        this.TOOLS[this.ToolID.GUIDES]
+                    ]
+                },
+                {
+                    id: this.GroupID.EDIT,
+                    title: 'Edit',
+                    tools: [
+                        this.TOOLS[this.ToolID.DRAG],
+                        this.TOOLS[this.ToolID.RESIZE],
+                        this.TOOLS[this.ToolID.TEXT],
+                        this.TOOLS[this.ToolID.STYLE]
+                    ]
+                },
+                {
+                    id: this.GroupID.CONTENT,
+                    title: 'Content',
+                    tools: [
+                        this.TOOLS[this.ToolID.IMAGE]
+                    ]
+                }
+            ]
+        }
     ];
 
     // Helper methods

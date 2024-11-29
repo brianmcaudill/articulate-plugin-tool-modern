@@ -4,12 +4,12 @@ ArticulateTools.ResizeTool = class {
     constructor() {
         this.isEnabled = false;
         this.vectorshapeStates = new WeakMap();
-    
+
         // Bind methods
         this.init = this.init.bind(this);
         this.toggle = this.toggle.bind(this);
         this.destroy = this.destroy.bind(this);
-        this.getEnabled = this.getEnabled.bind(this);  // Changed from isEnabled to getEnabled
+        this.getEnabled = this.getEnabled.bind(this);
         this.makeVectorshapeResizable = this.makeVectorshapeResizable.bind(this);
         this.removeVectorshapeResize = this.removeVectorshapeResize.bind(this);
     }
@@ -48,31 +48,37 @@ ArticulateTools.ResizeTool = class {
         }
         .slide-object-vectorshape {
             pointer-events: auto !important;
+            position: absolute !important;
         }
     `;
 
     initStyles() {
         if (!document.getElementById('resize-tool-styles')) {
+            console.log('Adding ResizeTool styles...');
             const styleSheet = document.createElement('style');
             styleSheet.id = 'resize-tool-styles';
             styleSheet.textContent = ArticulateTools.ResizeTool.STYLES;
             document.head.appendChild(styleSheet);
+        } else {
+            console.log('ResizeTool styles already exist.');
         }
     }
 
     getOriginalDimensions(vectorshape) {
+        console.log('Fetching original dimensions...');
         const original = {
-            width: parseFloat(vectorshape.style.width),
-            height: parseFloat(vectorshape.style.height),
-            transform: vectorshape.style.transform,
+            width: parseFloat(vectorshape.style.width) || vectorshape.offsetWidth,
+            height: parseFloat(vectorshape.style.height) || vectorshape.offsetHeight,
+            transform: vectorshape.style.transform || '',
             scale: 1
         };
 
-        const transformMatch = vectorshape.style.transform.match(/scale\(([\d.]+),\s*([\d.]+)\)/);
+        const transformMatch = original.transform.match(/scale\(([\d.]+),\s*([\d.]+)\)/);
         if (transformMatch) {
             original.scale = parseFloat(transformMatch[1]);
         }
 
+        console.log('Original dimensions:', original);
         return original;
     }
 
@@ -89,29 +95,10 @@ ArticulateTools.ResizeTool = class {
         return resetBtn;
     }
 
-    createOverlay() {
-        const overlay = document.createElement('div');
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10000;
-            cursor: se-resize;
-        `;
-        return overlay;
-    }
-
     updateVectorshapeDimensions(vectorshape, newWidth, newHeight, state) {
+        console.log(`Updating dimensions: Width=${newWidth}px, Height=${newHeight}px`);
         vectorshape.style.width = `${newWidth}px`;
         vectorshape.style.height = `${newHeight}px`;
-
-        const svg = vectorshape.querySelector('svg');
-        if (svg) {
-            svg.style.width = '100%';
-            svg.style.height = '100%';
-        }
 
         const image = vectorshape.querySelector('image');
         if (image) {
@@ -122,44 +109,45 @@ ArticulateTools.ResizeTool = class {
     }
 
     makeVectorshapeResizable(vectorshape) {
+        console.log('Making vectorshape resizable:', vectorshape);
+
+        // State for the vectorshape
         const state = {
             original: this.getOriginalDimensions(vectorshape),
             isResizing: false,
             startX: 0,
             startY: 0,
             startWidth: 0,
-            startHeight: 0,
-            overlay: null
+            startHeight: 0
         };
         this.vectorshapeStates.set(vectorshape, state);
 
+        // Ensure proper positioning and interactivity
         vectorshape.style.position = 'absolute';
         vectorshape.style.pointerEvents = 'auto';
 
+        // Create resize handle and reset button
         const handle = this.createResizeHandle();
         const resetBtn = this.createResetButton();
         vectorshape.appendChild(handle);
         vectorshape.appendChild(resetBtn);
 
+        // Start resize logic
         const startResize = (e) => {
-            if (!state) return;
-            
+            console.log('Resize started for:', vectorshape);
             state.isResizing = true;
             state.startX = e.clientX;
             state.startY = e.clientY;
             state.startWidth = vectorshape.offsetWidth;
             state.startHeight = vectorshape.offsetHeight;
-            
+
             document.body.classList.add('resizing');
             e.preventDefault();
-            e.stopPropagation();
-
-            state.overlay = this.createOverlay();
-            document.body.appendChild(state.overlay);
         };
 
+        // Perform resize logic
         const doResize = (e) => {
-            if (!state?.isResizing) return;
+            if (!state.isResizing) return;
 
             const dx = e.clientX - state.startX;
             const aspectRatio = state.original.width / state.original.height;
@@ -168,83 +156,64 @@ ArticulateTools.ResizeTool = class {
 
             this.updateVectorshapeDimensions(vectorshape, newWidth, newHeight, state);
             e.preventDefault();
-            e.stopPropagation();
         };
 
+        // End resize logic
         const endResize = () => {
-            if (!state?.isResizing) return;
-            
+            if (!state.isResizing) return;
+
+            console.log('Resize ended for:', vectorshape);
             state.isResizing = false;
             document.body.classList.remove('resizing');
-            
-            if (state.overlay) {
-                state.overlay.remove();
-                state.overlay = null;
-            }
         };
 
+        // Reset dimensions
         resetBtn.addEventListener('click', (e) => {
+            console.log('Resetting dimensions for:', vectorshape);
             const state = this.vectorshapeStates.get(vectorshape);
             if (!state) return;
 
             vectorshape.style.width = `${state.original.width}px`;
             vectorshape.style.height = `${state.original.height}px`;
             vectorshape.style.transform = state.original.transform;
-            
-            const image = vectorshape.querySelector('image');
-            if (image) {
-                image.setAttribute('transform', `scale(${state.original.scale}, ${state.original.scale})`);
-            }
-            
+
             e.stopPropagation();
         });
 
+        // Attach event listeners
         handle.addEventListener('mousedown', startResize, true);
         document.addEventListener('mousemove', doResize, true);
         document.addEventListener('mouseup', endResize, true);
-
-        state.cleanup = () => {
-            document.removeEventListener('mousemove', doResize, true);
-            document.removeEventListener('mouseup', endResize, true);
-            if (state.overlay) {
-                state.overlay.remove();
-            }
-            this.vectorshapeStates.delete(vectorshape);
-        };
     }
 
     removeVectorshapeResize(vectorshape) {
-        const state = this.vectorshapeStates.get(vectorshape);
-        if (state?.cleanup) {
-            state.cleanup();
-        }
-
+        console.log('Removing resize functionality for:', vectorshape);
         vectorshape.querySelectorAll('.resize-handle, .reset-btn').forEach(el => el.remove());
-    }
-
-    init() {
-        this.initStyles();
+        this.vectorshapeStates.delete(vectorshape);
     }
 
     toggle() {
         this.isEnabled = !this.isEnabled;
         const vectorshapes = document.querySelectorAll('.slide-object-vectorshape');
-        
-        if (this.isEnabled) {
-            vectorshapes.forEach(shape => this.makeVectorshapeResizable(shape));
-            console.log('Vectorshape resize enabled');
-        } else {
-            vectorshapes.forEach(shape => this.removeVectorshapeResize(shape));
-            console.log('Vectorshape resize disabled');
-        }
 
-        return this.isEnabled;
+        if (this.isEnabled) {
+            console.log('Enabling resize for vectorshapes...');
+            vectorshapes.forEach(shape => this.makeVectorshapeResizable(shape));
+        } else {
+            console.log('Disabling resize for vectorshapes...');
+            vectorshapes.forEach(shape => this.removeVectorshapeResize(shape));
+        }
+    }
+
+    init() {
+        console.log('Initializing ResizeTool...');
+        this.initStyles();
     }
 
     destroy() {
+        console.log('Destroying ResizeTool...');
         document.querySelectorAll('.slide-object-vectorshape')
             .forEach(shape => this.removeVectorshapeResize(shape));
-        
         document.getElementById('resize-tool-styles')?.remove();
         this.isEnabled = false;
     }
@@ -254,10 +223,10 @@ ArticulateTools.ResizeTool = class {
     }
 
     // Static factory method
-    // static init() {
-    //     const resizeTool = new ArticulateTools.ResizeTool();
-    //     resizeTool.init();
-    //     return resizeTool;
-    // }
+    static init() {
+        const resizeTool = new ArticulateTools.ResizeTool();
+        resizeTool.init();
+        return resizeTool;
+    }
 }
 console.log('resize.js loaded');

@@ -6,37 +6,61 @@ ArticulateTools.GridTool = class {
         this.gridContainer = null;
         this.isInitialized = false;
         this.styles = `
-    .storyline-grid {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 9999;
-    }
+.storyline-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
 
-    .storyline-grid-lines {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: 
-            linear-gradient(to right, rgba(0, 100, 255, 0.1) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(0, 100, 255, 0.1) 1px, transparent 1px);
-    }
+        .storyline-grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(to right, rgba(0, 100, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 100, 255, 0.1) 1px, transparent 1px);
+        }
 
-    .storyline-grid-major {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: 
-            linear-gradient(to right, rgba(0, 100, 255, 0.2) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(0, 100, 255, 0.2) 1px, transparent 1px);
-    }
+        .storyline-grid-major {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(to right, rgba(0, 100, 255, 0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 100, 255, 0.2) 1px, transparent 1px);
+        }
+
+        .grid-controls {
+            position: fixed;
+            top: 190px;
+            right: 10px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            z-index: 10002;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .grid-controls label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .grid-controls input {
+            width: 60px;
+            margin-right: 5px;
+        }
 `;
     }
 

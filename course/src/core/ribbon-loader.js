@@ -18,7 +18,7 @@ ArticulateTools.RibbonLoader = class {
     checkDependencies() {
         const required = {
             core: ['Ribbon', 'RibbonStyles', 'RibbonConfig', 'RibbonManagers'],
-            tools: ['SlideList','GridTool', 'DragTool', 'TspanEditor', 'ImageSwap', 'ResizeTool']
+            tools: ['SlideList','GridTool', 'DragTool', 'TspanEditor', 'ImageSwap', 'ResizeTool', 'ResizeImgTool','ResizeSvgTool']
         };
     
         const missing = {
@@ -62,6 +62,12 @@ ArticulateTools.RibbonLoader = class {
         const resizeTool = new ArticulateTools.ResizeTool();
         this.instances.tools.set('resize', resizeTool);
 
+                // Initialize resize tool
+                const resizeImgTool = new ArticulateTools.ResizeImgTool();
+                this.instances.tools.set('resizeImg', resizeImgTool);
+                        // Initialize resize tool
+        const resizeSvgTool = new ArticulateTools.ResizeSvgTool();
+        this.instances.tools.set('resizeSvg', resizeSvgTool);
     // Initialize slide list
     const slideList = new ArticulateTools.SlideList();
     slideList.init();
@@ -108,7 +114,9 @@ ArticulateTools.RibbonLoader = class {
         'text': () => this.handleExclusiveToolToggle('textEditor'),
         'style': () => this.handleExclusiveToolToggle('textStyler'),
         'image': () => this.handleExclusiveToolToggle('imageSwap'),
-        'resize': () => this.handleExclusiveToolToggle('resize')
+        'resize': () => this.handleExclusiveToolToggle('resize'),
+        'resizeImg': () => this.handleExclusiveToolToggle('resizeImg'),
+        'resizeSvg': () => this.handleExclusiveToolToggle('resizeSvg'),
     }
     handleExclusiveToolToggle(toolId) {
         const exclusiveTools = ArticulateTools.RibbonConfig.MutuallyExclusiveTools[toolId] || [];
@@ -124,18 +132,22 @@ ArticulateTools.RibbonLoader = class {
         // Toggle the requested tool
         return this.instances.tools.get(toolId).toggle();
     }
+
     connectToolButtons() {
-        console.log("tools: " + this.instances.tools);
-        console.log(this.instances.tools);
         ArticulateTools.RibbonConfig.TABS.forEach(tab => {
             tab.groups.forEach(group => {
                 group.tools.forEach(tool => {
-                    console.log("connect tool buttons: ")
-                    console.log("tool id: " + tool.id + " map: " + this.toolToggleMap[tool.id] + "fn: " + tool.toggleFn);
-                    if (tool.toggleFn && this.toolToggleMap[tool.id]) {
+                    if (tool?.toggleFn && this.toolToggleMap[tool.id]) {
                         window[tool.toggleFn] = this.toolToggleMap[tool.id];
-                    }else{
-                        console.error("tool id: " + tool.id + " map: " + this.toolToggleMap[tool.id] + " fn: " + tool.toggleFn);
+                    }
+                    
+                    // Handle subTools
+                    if (tool?.subTools) {
+                        tool.subTools.forEach(subTool => {
+                            if (subTool?.toggleFn && this.toolToggleMap[subTool.id]) {
+                                window[subTool.toggleFn] = this.toolToggleMap[subTool.id];
+                            }
+                        });
                     }
                 });
             });

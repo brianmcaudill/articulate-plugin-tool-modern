@@ -4,6 +4,9 @@ ArticulateTools.SlideList = class {
   constructor() {
     this.navData = null;
     this.menuContainer = null;
+    this.isDragging = false;
+    this.dragOffsetX = 0;
+    this.dragOffsetY = 0;
   }
 
   // Initializes styles
@@ -26,9 +29,7 @@ ArticulateTools.SlideList = class {
         width: 250px;
         max-height: 90vh;
         overflow-y: auto;
-      }
-      #menuControl {
-        margin-bottom: 10px;
+        cursor: move; /* Indicate draggable menu */
       }
       #menuContent div {
         margin: 5px 0;
@@ -69,18 +70,48 @@ ArticulateTools.SlideList = class {
     const container = document.createElement("div");
     container.id = "menuContainer";
     container.innerHTML = `
-      <div id="menuControl">
-        <label for="menuType">Menu Type:</label>
-        <select id="menuType">
-          <option value="links" selected>Links</option>
-          <option value="titles">Titles</option>
-          <option value="both">Both</option>
-        </select>
-      </div>
       <div id="menuContent"></div>
     `;
     this.menuContainer = container;
     document.body.prepend(this.menuContainer);
+
+    // Make the menu draggable
+    this.makeDraggable(this.menuContainer);
+  }
+
+  // Makes an element draggable
+  makeDraggable(element) {
+    const startDrag = (e) => {
+      this.isDragging = true;
+      this.dragOffsetX = e.clientX - element.getBoundingClientRect().left;
+      this.dragOffsetY = e.clientY - element.getBoundingClientRect().top;
+
+      // Temporarily change the cursor to indicate dragging
+      element.style.cursor = "grabbing";
+      document.body.style.userSelect = "none";
+    };
+
+    const doDrag = (e) => {
+      if (!this.isDragging) return;
+
+      const newX = e.clientX - this.dragOffsetX;
+      const newY = e.clientY - this.dragOffsetY;
+
+      element.style.left = `${newX}px`;
+      element.style.top = `${newY}px`;
+      element.style.right = "auto"; // Reset right position to avoid conflicts
+    };
+
+    const endDrag = () => {
+      this.isDragging = false;
+      element.style.cursor = "move"; // Reset cursor
+      document.body.style.userSelect = ""; // Re-enable text selection
+    };
+
+    // Attach event listeners for dragging
+    element.addEventListener("mousedown", startDrag);
+    document.addEventListener("mousemove", doDrag);
+    document.addEventListener("mouseup", endDrag);
   }
 
   // Renders the menu based on nav data
@@ -128,19 +159,10 @@ ArticulateTools.SlideList = class {
       this.initStyles();
       this.createMenuContainer();
       this.renderMenu();
-      this.attachEventListeners();
     }
 
     this.menuContainer.style.display =
       this.menuContainer.style.display === "block" ? "none" : "block";
-  }
-
-  // Adds event listeners
-  attachEventListeners() {
-    const menuTypeSelector = this.menuContainer.querySelector("#menuType");
-    menuTypeSelector.addEventListener("change", (e) => {
-      this.renderMenu(e.target.value);
-    });
   }
     init() {
         this.initStyles();
@@ -160,9 +182,4 @@ ArticulateTools.SlideList = class {
     return slideList;
   }
 };
-
-// Example usage
-// document.addEventListener("DOMContentLoaded", () => {
-//   const slideList = ArticulateTools.SlideList.init();
-//   console.log("SlideList initialized:", slideList);
-// });
+console.log("navlist.js loaded")

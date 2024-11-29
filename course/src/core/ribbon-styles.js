@@ -5,15 +5,16 @@ ArticulateTools.RibbonStyles = class {
         this.STYLE_ID = 'articulate-ribbon-styles';
         this.CORE_STYLES = {
             container: `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                background: #ffffff;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                z-index: 10000;
-                user-select: none;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 10000;
+        user-select: none;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+ 
             `,
             tabs: `
                 display: flex;
@@ -63,22 +64,32 @@ ArticulateTools.RibbonStyles = class {
                 overflow: hidden;
                 padding: 0;
             }
-            .sl-ribbon-group {
-                ${this.CORE_STYLES.group}
-            }
+
             .sl-ribbon-tools {
                 ${this.CORE_STYLES.tools}
             }
-            .sl-ribbon-button {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                padding: 4px 8px;
-                border: none;
-                background: none;
-                cursor: pointer;
-                border-radius: 4px;
-            }
+                .sl-ribbon-tools > .sl-ribbon-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+    .sl-ribbon-subtoolbar > .sl-ribbon-button {
+    
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: auto;
+    gap: 8px;
+    padding: 4px 12px;
+}
+.sl-ribbon-button {
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    position: relative;
+}
             .sl-ribbon-button:hover {
                 background: rgba(0,0,0,0.05);
             }
@@ -89,17 +100,6 @@ ArticulateTools.RibbonStyles = class {
             .sl-ribbon-label {
                 font-size: 12px;
                 text-align: center;
-            }
-                            .sl-ribbon-button {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                padding: 4px 8px;
-                border: none;
-                background: none;
-                cursor: pointer;
-                border-radius: 4px;
-                position: relative;
             }
             .sl-ribbon-button:hover {
                 background: rgba(0,0,0,0.05);
@@ -119,6 +119,67 @@ ArticulateTools.RibbonStyles = class {
                 background: #1976d2;
                 border-radius: 50%;
             }
+.sl-ribbon-subtoolbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 1px);
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-top: none;
+    padding: 4px;
+    display: flex;
+    gap: 4px;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+// Replace the subtoolbar button styles (around lines 126-142) with:
+
+.sl-ribbon-subtoolbar > .sl-ribbon-button {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: auto;
+    gap: 8px;
+    padding: 4px 12px;
+}
+.sl-ribbon-subtoolbar .sl-ribbon-icon {
+    margin: 0 8px 0 0;
+    font-size: 16px;
+}
+
+.sl-ribbon-subtoolbar .sl-ribbon-label {
+    margin: 0;
+    text-align: left;
+}
+.sl-ribbon-subtoolbar > .sl-ribbon-button > .sl-ribbon-icon {
+    margin: 0 !important;
+    font-size: 16px;
+}
+
+.sl-ribbon-subtoolbar > .sl-ribbon-button > .sl-ribbon-label {
+    margin: 0;
+    white-space: nowrap;
+    text-align: left;
+}
+.sl-ribbon-group {
+    position: relative;  /* Add this */
+}
+    
+
+.sl-ribbon-button.has-subtools::after {
+    content: '▼';
+    font-size: 8px;
+    margin-left: 4px;
+    opacity: 0.7;
+}
+        .sl-ribbon-spacer {
+        height: 150px;  // Adjust this value based on your ribbon height
+        width: 100%;
+        display: block;
+    }
         `;
     }
 
