@@ -1,7 +1,3 @@
-/course/html5
-/course/lms
-/course/mobile
-/course/story_content
-/course/*.html
-/course/*.xml
-/course/*.xsd
+courses
+app/src/plugins/pintura-8.82.7/**
+app/src/plugins/cropper/**

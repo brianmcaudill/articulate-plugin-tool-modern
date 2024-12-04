@@ -15,7 +15,12 @@ ArticulateTools.RibbonInitializer = class {
 
     validateInstance() {
         if (!ArticulateTools.Ribbon) {
-            throw new Error('ArticulateTools.Ribbon class is not defined');
+            throw new Error("ArticulateTools.Ribbon class is not defined");
+        }
+    }
+    validateInstance() {
+        if (!ArticulateTools.Ribbon) {
+            throw new Error("ArticulateTools.Ribbon class is not defined");
         }
     }
 
@@ -23,7 +28,7 @@ ArticulateTools.RibbonInitializer = class {
         if (!this.instance) return;
 
         window.toggleStorylineRibbon = () => {
-            const display = this.instance.container.style.display === 'none' ? 'block' : 'none';
+            const display = this.instance.container.style.display === "none" ? "block" : "none";
             this.instance.container.style.display = display;
             this.instance.spacer.style.display = display;
         };
@@ -40,7 +45,7 @@ ArticulateTools.RibbonInitializer = class {
             this.validateInstance();
             
             if (this.instance) {
-                console.warn('Ribbon already initialized');
+                console.warn("Ribbon already initialized");
                 return this.instance;
             }
 
@@ -48,11 +53,11 @@ ArticulateTools.RibbonInitializer = class {
             this.instance.mount();
             this.createToggleFunction();
             
-            console.log('Storyline ribbon initialized! Use window.toggleStorylineRibbon() to show/hide.');
+            console.log("Storyline ribbon initialized! Use window.toggleStorylineRibbon() to show/hide.");
             return this.instance;
 
         } catch (error) {
-            console.error('Failed to initialize ribbon:', error);
+            console.error("Failed to initialize ribbon:", error);
             this.destroy();
             throw error;
         }
@@ -77,12 +82,12 @@ ArticulateTools.RibbonInitializer = class {
 }
 
 // Initialize on DOM content loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     try {
         ArticulateTools.RibbonInitializer.init();
-        console.log('Ribbon initialized successfully');
+        console.log("Ribbon initialized successfully");
     } catch (error) {
-        console.error('Failed to initialize ribbon:', error);
+        console.error("Failed to initialize ribbon:", error);
     }
 });
-console.log('ribbon-init.js loaded');
+console.log("ribbon-init.js loaded");

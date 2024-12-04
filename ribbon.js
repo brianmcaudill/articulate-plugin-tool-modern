@@ -1,6 +1,6 @@
 window.ArticulateTools = window.ArticulateTools || {};
 
-ArticulateTools.Interface = class {
+ArticulateTools.RibbonInterface = class {
     constructor() {
         this.ribbon = null;
         this.observer = null;
@@ -14,20 +14,20 @@ ArticulateTools.Interface = class {
 
         this.CONFIG = {
             scripts: [
-                '../ribbon/ribbon-styles.js',
-                '../ribbon/ribbon-data.js',
-                '../ribbon/ribbon-core.js',
-                '../ribbon/ribbon-tooltips.js',
-                '../ribbon/ribbon-extended.js',
-                '../ribbon/ribbon-init.js',
-                '../ribbon/functions/navlist.js',
-                '../ribbon/functions/grid_overlay.js'
+                "../ribbon/ribbon-styles.js",
+                "../ribbon/ribbon-data.js",
+                "../ribbon/ribbon-core.js",
+                "../ribbon/ribbon-tooltips.js",
+                "../ribbon/ribbon-extended.js",
+                "../ribbon/ribbon-init.js",
+                "../ribbon/functions/navlist.js",
+                "../ribbon/functions/grid_overlay.js"
             ],
             observerConfig: {
                 childList: true,
                 subtree: true,
                 attributes: true,
-                attributeFilter: ['data-sl-type']
+                attributeFilter: ["data-sl-type"]
             }
         };
 
@@ -47,7 +47,7 @@ ArticulateTools.Interface = class {
 
     async loadScript(url) {
         return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
+            const script = document.createElement("script");
             script.src = url;
             script.onload = resolve;
             script.onerror = reject;
@@ -69,24 +69,24 @@ ArticulateTools.Interface = class {
     }
 
     setupKeyboardShortcuts() {
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && ['Space', 'KeyS', 'KeyZ', 'KeyY'].includes(e.code)) {
+        document.addEventListener("keydown", (e) => {
+            if (e.ctrlKey && ["Space", "KeyS", "KeyZ", "KeyY"].includes(e.code)) {
                 e.preventDefault();
             }
 
             if (e.ctrlKey) {
                 switch (e.code) {
-                    case 'Space':
+                    case "Space":
                         this.toggleRibbon();
                         break;
-                    case 'KeyS':
+                    case "KeyS":
                         this.ribbon?.handleQuickSave();
                         break;
-                    case 'KeyZ':
+                    case "KeyZ":
                         if (!e.shiftKey) this.ribbon?.handleUndo();
                         else this.ribbon?.handleRedo();
                         break;
-                    case 'KeyY':
+                    case "KeyY":
                         this.ribbon?.handleRedo();
                         break;
                 }
@@ -95,7 +95,7 @@ ArticulateTools.Interface = class {
     }
 
     setupResizeHandler() {
-        window.addEventListener('resize', () => {
+        window.addEventListener("resize", () => {
             clearTimeout(this.resizeTimeout);
             this.resizeTimeout = setTimeout(() => {
                 this.ribbon?.render();
@@ -108,7 +108,7 @@ ArticulateTools.Interface = class {
             const shouldUpdate = mutations.some(mutation => 
                 Array.from(mutation.addedNodes)
                     .concat(Array.from(mutation.removedNodes))
-                    .some(node => node.hasAttribute?.('data-sl-type'))
+                    .some(node => node.hasAttribute?.("data-sl-type"))
             );
             
             if (shouldUpdate) {
@@ -120,8 +120,8 @@ ArticulateTools.Interface = class {
     }
 
     updateUndoRedoState() {
-        const undoButton = document.querySelector('.sl-ribbon-undo');
-        const redoButton = document.querySelector('.sl-ribbon-redo');
+        const undoButton = document.querySelector(".sl-ribbon-undo");
+        const redoButton = document.querySelector(".sl-ribbon-redo");
         
         if (undoButton) {
             undoButton.disabled = this.state.historyIndex < 0;
@@ -133,7 +133,7 @@ ArticulateTools.Interface = class {
 
     async init() {
         if (window.storylineInterfaceInitialized) {
-            console.warn('Storyline interface is already initialized');
+            console.warn("Storyline interface is already initialized");
             return this;
         }
 
@@ -151,11 +151,11 @@ ArticulateTools.Interface = class {
             this.setupMutationObserver();
 
             window.storylineInterfaceInitialized = true;
-            console.log('Storyline interface successfully initialized');
+            console.log("Storyline interface successfully initialized");
             return this;
 
         } catch (error) {
-            console.error('Failed to initialize interface:', error);
+            console.error("Failed to initialize interface:", error);
             this.destroy();
             throw error;
         }
@@ -193,14 +193,14 @@ ArticulateTools.Interface = class {
     }
 
     static init() {
-        const interface = new ArticulateTools.Interface();
-        return interface.init();
+        const ribbonInterface = new ArticulateTools.RibbonInterface();
+        return ribbonInterface.init();
     }
 }
 
 // Auto-initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => ArticulateTools.Interface.init());
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => ArticulateTools.RibbonInterface.init());
 } else {
-    ArticulateTools.Interface.init();
+    ArticulateTools.RibbonInterface.init();
 }

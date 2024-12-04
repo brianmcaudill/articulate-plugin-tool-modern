@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Table of Contents</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .toc {
+            list-style-type: none;
+            padding: 0;
+        }
+        .toc li {
+            margin: 5px 0;
+        }
+        .toc a {
+            text-decoration: none;
+            color: #007BFF;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        .toc li ul {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Course Table of Contents</h1>
+    <ul class="toc" id="toc"></ul>
+    <script src="imsmanifestparser.js"></script>
+    <script>
+        
+
+        async function loadTableOfContents(manifestPath) {
+            try {
+                const parser = new IMSManifestParser(manifestPath, {
+                    studentId: "user123",
+                    studentName: "Alice Example",
+                    courseId: "course567",
+                    basePath: "",
+                    debug: true, // Enable debug logging
+                });
+
+                const courseLinks = await parser.parse();
+                console.log(courseLinks)
+                generateTOC(courseLinks);
+            } catch (error) {
+                console.error("Error loading TOC:", error.message);
+                document.getElementById("toc").innerHTML = "<li>Error loading table of contents.</li>";
+            }
+        }
+
+        function generateTOC(links) {
+            const tocContainer = document.getElementById("toc");
+
+            // Create a nested list structure based on parentIndex
+            const tocMap = {};
+            links.forEach((link, index) => {
+                link.children = [];
+                tocMap[index] = link;
+
+                if (link.parentIndex === -1) {
+                    // Root level item
+                    tocContainer.appendChild(createTOCItem(link));
+                } else {
+                    // Child item, add to parent
+                    const parent = tocMap[link.parentIndex];
+                    if (parent) {
+                        parent.children.push(link);
+                    }
+                }
+            });
+
+            // Recursively render nested items
+            links.forEach((link) => {
+                if (link.children.length > 0) {
+                    const parentNode = document.querySelector(`[data-id="${link.identifier}"] ul`);
+                    link.children.forEach((child) => {
+                        parentNode.appendChild(createTOCItem(child));
+                    });
+                }
+            });
+        }
+
+        function createTOCItem(link) {
+    const listItem = document.createElement("li");
+    listItem.setAttribute("data-id", link.identifier);
+
+    const anchor = document.createElement("a");
+    anchor.href = link.serverRelative; // Use server-relative URL for the main link
+    console.log(link.serverRelative)
+    anchor.textContent = link.title;
+
+    listItem.appendChild(anchor);
+
+    // Add path details below the link
+    const pathInfo = document.createElement("div");
+    pathInfo.className = "path-info";
+    pathInfo.innerHTML = `
+        <strong>Package Relative:</strong> ${link.packageRelative}<br>
+        <strong>Server Relative:</strong> ${link.serverRelative}
+    `;
+    listItem.appendChild(pathInfo);
+
+    // Add a nested <ul> for child items
+    const nestedList = document.createElement("ul");
+    listItem.appendChild(nestedList);
+
+    return listItem;
+}
+
+        // Load the manifest and build the TOC
+        loadTableOfContents("courses/articulate-rise/course99/imsmanifest.xml");
+    </script>
+</body>
+</html>

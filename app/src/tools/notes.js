@@ -1,0 +1,1 @@
+console.log('notes.js loaded');

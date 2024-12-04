@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "eslint": "^9.16.0",
+    "globals": "^15.13.0",
+    "rollup": "^4.28.0"
+  },
+  "scripts": {
+    "lint": "eslint \"**/*.js\" --ignore-pattern \"courses/**\" --ignore-pattern \"app/src/plugins/**\" --ignore-pattern \"dead-code/**\"",
+    "build": "rollup -c"
+  }
+}
